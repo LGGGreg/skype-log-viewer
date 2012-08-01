@@ -1,0 +1,4 @@
+syntax: glob
+SkypeLogViewerLGG/bin/*
+SkypeLogViewerLGG/obj/*
+SkypeLogViewerLGG.suo
