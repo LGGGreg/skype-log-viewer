@@ -36,7 +36,7 @@
     <ApplicationIcon>SkypeLogLGG.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestCertificateThumbprint>5F972E42ED816A3D2BA07D99262A60E6D0BB14E0</ManifestCertificateThumbprint>
@@ -119,6 +119,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\SkypeLogSLGG.png" />
+    <None Include="Resources\SkypeLogSBLGG.png" />
     <Content Include="SkypeLogLGG.ico" />
     <EmbeddedResource Include="System.Data.SQLite.dll" />
   </ItemGroup>

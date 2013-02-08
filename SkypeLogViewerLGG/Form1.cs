@@ -41,7 +41,8 @@ namespace SkypeLogViewerLGG
             loadSQL();
             InitializeComponent();
             this.imageList1.Images.Add((Image)(Properties.Resources.SkypeLogSLGG));
-            this.imageList1.Images.Add((Image)(Properties.Resources.SkypeLogLGG));            
+            this.imageList1.Images.Add((Image)(Properties.Resources.SkypeLogLGG));
+            this.imageList1.Images.Add((Image)(Properties.Resources.SkypeLogSBLGG));            
         }
         private void loadSQL()
         {
@@ -174,14 +175,47 @@ namespace SkypeLogViewerLGG
                     while (chatDataRead.Read())
                         chats.Add(chatDataRead[0].ToString());
                     tempConv.chats = chats.ToArray();
-                    if (tempConv.chats.Length <= 0) continue;
+                    if (tempConv.chats.Length <= 0)
+                    {                        
+                        //tempConv.setType(3);
+                        continue;
+                    }
                 }
-                ListViewItem tempItem = new ListViewItem(tempConv.DisplayName);
-                tempItem.Tag = tempConv;
-                tempItem.ToolTipText = tempConv.DisplayName+"\r\n"+tempConv.Identity;
-                tempItem.ImageIndex = tempItem.StateImageIndex=tempConv.getType()-1;
-                listViewConversations.Items.Add(tempItem);
+                if (tempConv.getType() < 3)
+                {
+                    ListViewItem tempItem = new ListViewItem(tempConv.DisplayName);
+                    tempItem.Tag = tempConv;
+                    tempItem.ToolTipText = tempConv.DisplayName + "\r\n" + tempConv.Identity;
+                    tempItem.ImageIndex = tempItem.StateImageIndex = tempConv.getType() - 1;
+                    listViewConversations.Items.Add(tempItem);
+                }
                 debugAdd("Found: "+ dataRead["displayname"] + " at "+tempConv.Identity);
+            }
+            cmd.Dispose();
+            // find broken msn b.s. 
+            if (true)
+            {
+
+                SQLiteCommand brokenCmd = connection.CreateCommand();
+                brokenCmd.CommandText = "select DISTINCT author,from_dispname from Messages where ifnull(chatname, '') = '' and ifnull(dialog_partner, '') = '' order by timestamp desc";
+                SQLiteDataReader brokenDataRead = brokenCmd.ExecuteReader();
+                while (brokenDataRead.Read())
+                {
+                    debugAdd("found missing partner with id of " + brokenDataRead["from_dispname"]);
+                    Conversation tempConv = new Conversation(
+                        brokenDataRead["from_dispname"].ToString(),
+                        "",
+                        "3");
+                    List<String> chats = new List<String>();
+                    chats.Add(brokenDataRead["from_dispname"].ToString());
+                    chats.Add(brokenDataRead["author"].ToString());
+                    tempConv.chats = chats.ToArray();
+                    ListViewItem tempItem = new ListViewItem(tempConv.DisplayName);
+                    tempItem.Tag = tempConv;
+                    tempItem.ToolTipText = tempConv.DisplayName + "\r\n" + tempConv.Identity;
+                    tempItem.ImageIndex = tempItem.StateImageIndex = tempConv.getType() - 1;
+                    listViewConversations.Items.Add(tempItem);
+                }
             }
         }
 
@@ -234,6 +268,7 @@ namespace SkypeLogViewerLGG
             }
             else if(c.getType()==1)
             {
+                if (c.chats.Length == 0) return messages;
                 String wheres = "";
                 foreach (string name in c.chats)
                 {
@@ -253,7 +288,29 @@ namespace SkypeLogViewerLGG
                     message.setDate(dataRead["timestamp"].ToString());
                     messages.Add(message);
                 }
-            }         
+            }
+            else if (c.getType() == 3)
+            {
+                String wheres = "";
+                if(c.chats!=null)
+                foreach (string name in c.chats)
+                {
+                    wheres += "OR dialog_partner='" + name + "' ";
+                }
+                SQLiteCommand cmd = connection.CreateCommand();
+                cmd.CommandText = "select timestamp,from_dispname,body_xml from Messages where "
+                    + "ifnull(chatname, '') = '' and from_dispname='"+c.DisplayName+"'" + wheres
+                    + " order by timestamp";
+                SQLiteDataReader dataRead = cmd.ExecuteReader();
+                while (dataRead.Read())
+                {
+                    SkypeMessage message = new SkypeMessage();
+                    message.sender = dataRead["from_dispname"].ToString();
+                    message.setData(dataRead["body_xml"].ToString());
+                    message.setDate(dataRead["timestamp"].ToString());
+                    messages.Add(message);
+                }
+            }
 
             return messages;
         }
@@ -317,7 +374,7 @@ namespace SkypeLogViewerLGG
         private void exportConversation(Conversation c, String directory)
         {
             String fileName = directory + "\\" +
-                c.DisplayName.Replace("\\", "-").Replace("/", "-").Replace(":", "-").Replace("*", "-")
+                (c.DisplayName+(c.getType()==3?"-Broken Log":"")).Replace("\\", "-").Replace("/", "-").Replace(":", "-").Replace("*", "-")
                 .Replace("\"", "-").Replace("|", "-").Replace(">", "-").Replace("<", "-").Replace("?", "-")
                 +".txt";
             List<SkypeMessage> messages = getSkypeMessages(c);               
@@ -325,7 +382,7 @@ namespace SkypeLogViewerLGG
             {
                 foreach (SkypeMessage message in messages)
                 {
-                    file.WriteLine("["+message.msgDate.ToString()+"] "+message.sender+":" +message.msgData);
+                    file.WriteLine("["+message.msgDate.ToString()+"] "+message.sender+": " +message.msgData);
                 }
             }
         }
@@ -398,7 +455,7 @@ namespace SkypeLogViewerLGG
             {
                 SkypeMessage message = item.Tag as SkypeMessage;
                 sb.AppendLine("["+message.msgDate.ToString()+"] "
-                    +message.sender+":" 
+                    +message.sender+": " 
                     +message.msgData);
             }
             if(sb.ToString()!="")Clipboard.SetText(sb.ToString());
@@ -422,6 +479,7 @@ namespace SkypeLogViewerLGG
             this.type = int.Parse(_type);
         }
         public int getType() { return type; }
+        public void setType(int newType) { type = newType; }
         public override string ToString()
         {
             return DisplayName;
