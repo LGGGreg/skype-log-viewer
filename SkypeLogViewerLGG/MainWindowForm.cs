@@ -30,13 +30,13 @@ This file is part of SkypeLogViewerLGG
 
 namespace SkypeLogViewerLGG
 {
-    public partial class Form1 : Form
+    public partial class MainWindowForm : Form
     {
         private string skypePath = "";
         SQLiteConnection connection;
         Conversation currentConversation;
 
-        public Form1()
+        public MainWindowForm()
         {
             loadSQL();
             InitializeComponent();
@@ -124,6 +124,8 @@ namespace SkypeLogViewerLGG
         }
         public void tryLoad()
         {
+            listViewConversations.Items.Clear();
+
             connection = new SQLiteConnection(
                         "data source=" + this.textBoxDataBasePath.Text);
             if (true)//checkAndKilledSkype()
@@ -254,13 +256,14 @@ namespace SkypeLogViewerLGG
             if (c.getType() == 2)
             {
                 SQLiteCommand cmd = connection.CreateCommand();
-                cmd.CommandText = "select timestamp,from_dispname,body_xml from Messages where chatname='" + c.Identity + "' order by timestamp";
+                cmd.CommandText = "select timestamp,from_dispname,author,body_xml from Messages where chatname='" + c.Identity + "' order by timestamp";
                 SQLiteDataReader dataRead = cmd.ExecuteReader();
                 while (dataRead.Read())
                 {
                     //debugAdd("Found message " + dataRead["body_xml"]);
                     SkypeMessage message = new SkypeMessage();
                     message.sender = dataRead["from_dispname"].ToString();
+                    message.senderID = dataRead["author"].ToString();
                     message.setData(dataRead["body_xml"].ToString());
                     message.setDate(dataRead["timestamp"].ToString());
                     messages.Add(message);
@@ -275,7 +278,7 @@ namespace SkypeLogViewerLGG
                     wheres += "OR chatname='" + name + "' ";
                 }
                 SQLiteCommand cmd = connection.CreateCommand();
-                cmd.CommandText = "select timestamp,from_dispname,body_xml from Messages where "
+                cmd.CommandText = "select timestamp,from_dispname,author,body_xml from Messages where "
                     + wheres.Substring(3)
                     + " order by timestamp";
                 SQLiteDataReader dataRead = cmd.ExecuteReader();
@@ -284,6 +287,7 @@ namespace SkypeLogViewerLGG
                     //debugAdd("Found message " + dataRead["body_xml"]);
                     SkypeMessage message = new SkypeMessage();
                     message.sender = dataRead["from_dispname"].ToString();
+                    message.senderID = dataRead["author"].ToString();
                     message.setData(dataRead["body_xml"].ToString());
                     message.setDate(dataRead["timestamp"].ToString());
                     messages.Add(message);
@@ -298,7 +302,7 @@ namespace SkypeLogViewerLGG
                     wheres += "OR dialog_partner='" + name + "' ";
                 }
                 SQLiteCommand cmd = connection.CreateCommand();
-                cmd.CommandText = "select timestamp,from_dispname,body_xml from Messages where "
+                cmd.CommandText = "select timestamp,from_dispname,author,body_xml from Messages where "
                     + "ifnull(chatname, '') = '' and from_dispname='"+c.DisplayName+"'" + wheres
                     + " order by timestamp";
                 SQLiteDataReader dataRead = cmd.ExecuteReader();
@@ -306,6 +310,7 @@ namespace SkypeLogViewerLGG
                 {
                     SkypeMessage message = new SkypeMessage();
                     message.sender = dataRead["from_dispname"].ToString();
+                    message.senderID = dataRead["author"].ToString();
                     message.setData(dataRead["body_xml"].ToString());
                     message.setDate(dataRead["timestamp"].ToString());
                     messages.Add(message);
@@ -371,6 +376,24 @@ namespace SkypeLogViewerLGG
             }
         }
 
+        public String formatMessage(SkypeMessage message, String messageFormat = "[[Month]/[Day]/[Year] [Time]] [DisplayName]:")
+        {
+            
+            messageFormat = messageFormat.Replace("[Day]", message.msgDate.Day.ToString());
+            messageFormat = messageFormat.Replace("[Month]", message.msgDate.Month.ToString());
+            messageFormat = messageFormat.Replace("[Year]", message.msgDate.Year.ToString());
+
+            messageFormat = messageFormat.Replace("[Time]", message.msgDate.ToString("h:mm:ss tt"));
+
+
+            messageFormat = messageFormat.Replace("[DisplayName]", message.sender);
+            messageFormat = messageFormat.Replace("[UserName]", message.senderID);
+
+            messageFormat += " " + message.msgData;
+
+            return messageFormat;
+        }
+
         private void exportConversation(Conversation c, String directory)
         {
             String fileName = directory + "\\" +
@@ -382,7 +405,8 @@ namespace SkypeLogViewerLGG
             {
                 foreach (SkypeMessage message in messages)
                 {
-                    file.WriteLine("["+message.msgDate.ToString()+"] "+message.sender+": " +message.msgData);
+                    String format = (Properties.Settings.Default.Format != "") ? Properties.Settings.Default.Format : "[[Month]/[Day]/[Year] [Time]] [DisplayName]:";
+                    file.WriteLine(this.formatMessage(message,format));
                 }
             }
         }
@@ -396,6 +420,12 @@ namespace SkypeLogViewerLGG
         private void helpToolStripMenuItem_Click(object sender, EventArgs e)
         {
             HelpForm form = new HelpForm();
+            form.ShowDialog();
+        }
+
+        private void preferencesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            PreferencesForm form = new PreferencesForm(this);
             form.ShowDialog();
         }
 
@@ -460,6 +490,7 @@ namespace SkypeLogViewerLGG
             }
             if(sb.ToString()!="")Clipboard.SetText(sb.ToString());
         }
+
     }
     public class convsAndSaveDir
     {
@@ -489,9 +520,10 @@ namespace SkypeLogViewerLGG
     {
         private DateTime _msgDate;
         private string _msgData;
-        public DateTime msgDate { get { return _msgDate; } }
+        public DateTime msgDate { get { return _msgDate; } set { _msgDate = value; } }
         public string msgData { get { return _msgData; } }
         public string sender { get; set; }
+        public string senderID { get; set; }
         public void setData(string xmlin)
         {
             _msgData =

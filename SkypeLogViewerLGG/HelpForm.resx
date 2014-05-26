@@ -119,7 +119,7 @@
   </resheader>
   <data name="textBox1.Text" xml:space="preserve">
     <value>Skype Log Viewer LGG
-V 1.1
+V 1.2
 
 If you are having trouble, please make sure to check these common issues.
 
@@ -137,6 +137,9 @@ A. This process can take time, keep a eye on the progress bar on the bottom
 
 Q. I am unable to save or export logs
 A. You may need to disable UAC or run this program as administrator.
+
+Q. How do I change the data format
+A. Click on the Preferences Option
 
 Q. I need more specific help
 A. Please email lordgreggreg@gmail.com with a detailed explanation of the issue.
