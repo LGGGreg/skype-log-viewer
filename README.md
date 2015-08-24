@@ -13,3 +13,13 @@ Features
   
 ![Skype Log Icon](/Images/SkypeLogLGG.png?raw=true "Skype Log Icon")
 ![Skype Log ScreenShot](/Images/ScreenShot1.jpg?raw=true "Skype Log ScreenShot")
+
+
+**Code license**
+  * [GNU GPL v2](http://www.gnu.org/licenses/gpl-2.0.html)
+  
+**Content License**
+  * [Creative Commons 3.0 BY-SA](http://creativecommons.org/licenses/by-sa/3.0/)
+  
+**Code Of Conduct**
+  * Treat everyone with respect.
