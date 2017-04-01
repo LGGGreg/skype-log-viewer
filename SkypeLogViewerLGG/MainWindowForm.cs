@@ -164,7 +164,8 @@ namespace SkypeLogViewerLGG
                 Conversation tempConv = new Conversation(
                     dataRead["displayname"].ToString(),
                     dataRead["identity"].ToString(),
-                    dataRead["type"].ToString());
+                    dataRead["type"].ToString(),
+                    dataRead["id"].ToString());
                 if (tempConv.DisplayName == "") continue;
                 if (tempConv.getType()==1)
                 {
@@ -207,7 +208,8 @@ namespace SkypeLogViewerLGG
                     Conversation tempConv = new Conversation(
                         brokenDataRead["from_dispname"].ToString(),
                         "",
-                        "3");
+                        "3",
+                        "-1");
                     List<String> chats = new List<String>();
                     chats.Add(brokenDataRead["from_dispname"].ToString());
                     chats.Add(brokenDataRead["author"].ToString());
@@ -272,15 +274,8 @@ namespace SkypeLogViewerLGG
             else if(c.getType()==1)
             {
                 if (c.chats.Length == 0) return messages;
-                String wheres = "";
-                foreach (string name in c.chats)
-                {
-                    wheres += "OR chatname='" + name + "' ";
-                }
                 SQLiteCommand cmd = connection.CreateCommand();
-                cmd.CommandText = "select timestamp,from_dispname,author,body_xml from Messages where "
-                    + wheres.Substring(3)
-                    + " order by timestamp";
+                cmd.CommandText = "select timestamp,from_dispname,author,body_xml from Messages where convo_id = " + c.ConvoId + " order by timestamp";
                 SQLiteDataReader dataRead = cmd.ExecuteReader();
                 while (dataRead.Read())
                 {
@@ -501,12 +496,14 @@ namespace SkypeLogViewerLGG
     {
         public string DisplayName { get; set; }
         public string Identity { get; set; }
+        public int ConvoId { get; set; }
         private int type = 0;
         public string[] chats { get; set; }
-        public Conversation(string _displayName, string _identity, string _type)
+        public Conversation(string _displayName, string _identity, string _type, string _convo_id)
         {
             DisplayName = _displayName;
             Identity = _identity;
+            ConvoId = int.Parse(_convo_id);
             this.type = int.Parse(_type);
         }
         public int getType() { return type; }
