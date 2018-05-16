@@ -225,10 +225,15 @@ namespace SkypeLogViewerLGG
 
         private void button1_Click(object sender, EventArgs e)
         {
-            openFileDialog1.InitialDirectory = skypePath;
+            if (Properties.Settings.Default.LastFolderPath != "")
+				openFileDialog1.InitialDirectory = Properties.Settings.Default.LastFolderPath;
+			else
+				openFileDialog1.InitialDirectory = skypePath;
+
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 this.textBoxDataBasePath.Text = openFileDialog1.FileName;
+				Properties.Settings.Default.LastFolderPath = Path.GetDirectoryName(openFileDialog1.FileName);
             }
             tryLoad();
         }

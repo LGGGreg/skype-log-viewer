@@ -73,5 +73,17 @@ namespace SkypeLogViewerLGG.Properties {
                 this["Format"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastFolderPath {
+            get {
+                return ((string)(this["LastFolderPath"]));
+            }
+            set {
+                this["LastFolderPath"] = value;
+            }
+        }
     }
 }
