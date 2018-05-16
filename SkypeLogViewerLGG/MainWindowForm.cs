@@ -181,7 +181,7 @@ namespace SkypeLogViewerLGG
                     if (tempConv.chats.Length <= 0)
                     {                        
                         //tempConv.setType(3);
-                        continue;
+                        //continue;
                     }
                 }
                 if (tempConv.getType() < 3)
@@ -273,7 +273,7 @@ namespace SkypeLogViewerLGG
             }
             else if(c.getType()==1)
             {
-                if (c.chats.Length == 0) return messages;
+                //if (c.chats.Length == 0) return messages;
                 SQLiteCommand cmd = connection.CreateCommand();
                 cmd.CommandText = "select timestamp,from_dispname,author,body_xml from Messages where convo_id = " + c.ConvoId + " order by timestamp";
                 SQLiteDataReader dataRead = cmd.ExecuteReader();
