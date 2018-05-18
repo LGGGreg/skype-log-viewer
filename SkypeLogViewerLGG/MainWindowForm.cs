@@ -234,8 +234,9 @@ namespace SkypeLogViewerLGG
             {
                 this.textBoxDataBasePath.Text = openFileDialog1.FileName;
 				Properties.Settings.Default.LastFolderPath = Path.GetDirectoryName(openFileDialog1.FileName);
+
+				tryLoad();
             }
-            tryLoad();
         }
         private void loadMessagesFromIdentity(Conversation c)
         {
